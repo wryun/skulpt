@@ -2650,7 +2650,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
         case Sk.astnodes.Global:
             break;
         case Sk.astnodes.Expr:
-            this.vexpr(s.value);
+            return this.vexpr(s.value);
             break;
         case Sk.astnodes.Pass:
             break;
@@ -2904,8 +2904,15 @@ Compiler.prototype.cbody = function (stmts, class_for_super) {
         i = 1;
     }
 
+    let val;
     for (; i < stmts.length; ++i) {
-        this.vstmt(stmts[i], class_for_super);
+        val = this.vstmt(stmts[i], class_for_super);
+    }
+
+    if (typeof val === 'string') {
+        return val;
+    } else {
+        return 'Sk.builtin.none.none$';
     }
     /* Every annotated class and module should have __annotations__. */
     if (this.u.hasAnnotations) {
@@ -2994,7 +3001,8 @@ Compiler.prototype.cmod = function (mod) {
 
     switch (mod.constructor) {
         case Sk.astnodes.Module:
-            this.cbody(mod.body);
+            const val = this.cbody(mod.body);
+            out(`$loc.__last_expr_result__ = ${val};`);
             out("return $loc;");
             break;
         default:
