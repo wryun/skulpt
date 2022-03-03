@@ -1091,7 +1091,7 @@ function ast_for_call(c, n, func, allowgen)
 }
 
 function ast_for_trailer(c, n, left_expr) {
-    /* trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+    /* trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME | atomishthing
        subscriptlist: subscript (',' subscript)* [',']
        subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
      */
@@ -1110,8 +1110,7 @@ function ast_for_trailer(c, n, left_expr) {
         return new Sk.astnodes.Attribute(left_expr, attr_id, Sk.astnodes.Load,
                          LINENO(n), n.col_offset);
     }
-    else {
-        REQ(CHILD(n, 0), TOK.T_LSQB);
+    else if (TYPE(CHILD(n, 0)) == TOK.T_LSQB) {
         REQ(CHILD(n, 2), TOK.T_RSQB);
         n = CHILD(n, 1);
         if (NCH(n) == 1) {
@@ -1159,6 +1158,8 @@ function ast_for_trailer(c, n, left_expr) {
             return new Sk.astnodes.Subscript(left_expr, new Sk.astnodes.Index(e),
                              Sk.astnodes.Load, LINENO(n), n.col_offset);
         }
+    } else {
+        return new Sk.astnodes.Call(left_expr, [ast_for_atom(c, n)], NULL, LINENO(n), n.col_offset);
     }
 }
 

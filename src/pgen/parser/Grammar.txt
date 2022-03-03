@@ -111,7 +111,8 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
        '{' [dictorsetmaker] '}' |
        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
-trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+trailer: ('(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME |
+          NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
 subscriptlist: subscript (',' subscript)* [',']
 subscript: test | [test] ':' [test] [sliceop]
 sliceop: ':' [test]
