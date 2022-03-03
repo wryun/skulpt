@@ -326,6 +326,20 @@ Sk.astnodes.While = function While(/* {expr_ty} */ test, /* {asdl_seq *} */
 }
 
 /** @constructor */
+Sk.astnodes.Repeat = function Repeat(/* {expr_ty} */ expr, /* {asdl_seq *} */
+                                          body, /* {int} */ lineno, /* {int} */
+                                          col_offset)
+{
+    Sk.asserts.assert(lineno !== null && lineno !== undefined);
+    Sk.asserts.assert(col_offset !== null && col_offset !== undefined);
+    this.expr = expr;
+    this.body = body;
+    this.lineno = lineno;
+    this.col_offset = col_offset;
+    return this;
+}
+
+/** @constructor */
 Sk.astnodes.If = function If(/* {expr_ty} */ test, /* {asdl_seq *} */ body, /*
                                   {asdl_seq *} */ orelse, /* {int} */ lineno,
                                   /* {int} */ col_offset)
@@ -1155,6 +1169,11 @@ Sk.astnodes.While.prototype._fields = [
     "test", function(n) { return n.test; },
     "body", function(n) { return n.body; },
     "orelse", function(n) { return n.orelse; }
+];
+Sk.astnodes.Repeat.prototype._astname = "Repeat";
+Sk.astnodes.Repeat.prototype._fields = [
+    "expr", function(n) { return n.expr; },
+    "body", function(n) { return n.body; }
 ];
 Sk.astnodes.If.prototype._astname = "If";
 Sk.astnodes.If.prototype._fields = [

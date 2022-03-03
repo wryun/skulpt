@@ -1422,6 +1422,72 @@ Compiler.prototype.cwhile = function (s) {
     }
 };
 
+Compiler.prototype.crepeat = function (s) {
+    // Essentially just a copy of cfor.
+
+    var nexti;
+    var iter;
+    var toiter;
+    var start = this.newBlock("repeat start");
+    var cleanup = this.newBlock("repeat cleanup");
+    var end = this.newBlock("repeat end");
+
+    this.pushBreakBlock(end);
+    this.pushContinueBlock(start);
+
+    // get the iterator
+    toiter = this.vexpr(s.expr);
+    if (this.u.ste.generator) {
+        // if we're in a generator, we have to store the iterator to a local
+        // so it's preserved (as we cross blocks here and assume it survives)
+        iter = "$loc." + this.gensym("iter");
+        out(iter, "=Sk.abstr.iter(Sk.builtin.range(", toiter, "));");
+    } else {
+        iter = this._gr("iter", "Sk.abstr.iter(Sk.builtin.range(", toiter, "))");
+        this.u.tempsToSave.push(iter); // Save it across suspensions
+    }
+
+    this._jump(start);
+
+    this.setBlock(start);
+
+    // load targets
+    out ("$ret = Sk.abstr.iternext(", iter,(this.u.canSuspend?", true":", false"),");");
+
+    this._checkSuspension(s);
+
+    nexti = this._gr("next", "$ret");
+    this._jumpundef(nexti, cleanup); // todo; this should be handled by StopIteration
+
+    if ((Sk.debugging || Sk.killableFor) && this.u.canSuspend) {
+        var suspType = "Sk.delay";
+        var debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
+        out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
+            "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
+            "$susp.$blk = "+debugBlock+";",
+            "$susp.optional = true;",
+            "return $susp;",
+            "}");
+        this._jump(debugBlock);
+        this.setBlock(debugBlock);
+        this.u.doesSuspend = true;
+    }
+
+    // execute body
+    this.vseqstmt(s.body);
+
+    // jump to top of loop
+    this._jump(start);
+
+    this.setBlock(cleanup);
+    this.popContinueBlock();
+    this.popBreakBlock();
+
+    this._jump(end);
+
+    this.setBlock(end);
+};
+
 Compiler.prototype.cfor = function (s) {
     var target;
     var nexti;
@@ -2633,6 +2699,8 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             return this.cfor(s);
         case Sk.astnodes.While:
             return this.cwhile(s);
+        case Sk.astnodes.Repeat:
+            return this.crepeat(s);
         case Sk.astnodes.If:
             return this.cif(s);
         case Sk.astnodes.Raise:

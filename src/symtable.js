@@ -602,6 +602,10 @@ SymbolTable.prototype.visitStmt = function (s) {
                 this.SEQStmt(s.orelse);
             }
             break;
+        case Sk.astnodes.Repeat:
+            this.visitExpr(s.expr);
+            this.SEQStmt(s.body);
+            break;
         case Sk.astnodes.If:
             this.visitExpr(s.test);
             this.SEQStmt(s.body);

@@ -2015,6 +2015,15 @@ function astForWhileStmt (c, n) {
     Sk.asserts.fail("wrong number of tokens for 'while' stmt");
 }
 
+function astForRepeatStmt (c, n) {
+    /* repeat_stmt: 'repeat' expr ':' suite */
+    REQ(n, SYM.repeat_stmt);
+    if (NCH(n) === 4) {
+        return new Sk.astnodes.Repeat(ast_for_expr(c, CHILD(n, 1)), astForSuite(c, CHILD(n, 3)), n.lineno, n.col_offset);
+    }
+    Sk.asserts.fail("wrong number of tokens for 'while' stmt");
+}
+
 function astForAugassign (c, n) {
     REQ(n, SYM.augassign);
     n = CHILD(n, 0);
@@ -3209,6 +3218,8 @@ function astForStmt (c, n) {
                 return astForIfStmt(c, ch);
             case SYM.while_stmt:
                 return astForWhileStmt(c, ch);
+            case SYM.repeat_stmt:
+                return astForRepeatStmt(c, ch);
             case SYM.for_stmt:
                 return astForForStmt(c, ch);
             case SYM.try_stmt:
